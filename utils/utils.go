@@ -19,6 +19,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -141,4 +142,28 @@ func S3Upload(file *os.File, bucket, key string) error {
 	}
 	log.Println("Successfully uploaded to", result.Location)
 	return nil
+}
+
+// GetJobInput provides a common means of parsing the JobInput JSON.
+func GetJobInput(w http.ResponseWriter, r *http.Request, res objects.JobOutput) objects.JobInput {
+	var msg objects.JobInput
+
+	// There should always be a body, else how are we to know what to do? Throw
+	// 400 if missing.
+	if r.Body == nil {
+		BadRequest(w, r, res, "No JSON")
+	}
+
+	// Throw 500 if we cannot read the body.
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		InternalError(w, r, &res, err.Error())
+	}
+
+	// Throw 400 if we cannot unmarshal the body as a valid JobInput.
+	if err := json.Unmarshal(b, &msg); err != nil {
+		BadRequest(w, r, res, err.Error())
+	}
+
+	return msg
 }
