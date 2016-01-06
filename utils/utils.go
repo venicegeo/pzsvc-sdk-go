@@ -23,6 +23,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -166,4 +167,10 @@ func GetJobInput(w http.ResponseWriter, r *http.Request, res objects.JobOutput) 
 	}
 
 	return msg
+}
+
+// ParseFilenameFromKey parses the S3 filename from the key.
+func ParseFilenameFromKey(key string) string {
+	keySlice := strings.Split(key, "/")
+	return keySlice[len(keySlice)-1]
 }
