@@ -24,7 +24,7 @@ import (
 	"github.com/venicegeo/pzsvc-sdk-go/job"
 )
 
-func ExampleFoo() {
+func ExampleUpdate() {
 	var msg job.InputMsg
 	fmt.Println(msg)
 }
