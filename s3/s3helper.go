@@ -1,4 +1,4 @@
-package s3helper
+package s3
 
 import (
 	"fmt"
@@ -13,17 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
-// S3Bucket defines the expected JSON structure for S3 buckets.
-// An S3 bucket can be used for source (input) and destination (output) files.
-type S3Bucket struct {
-	Bucket string `json:"bucket"`
-	Key    string `json:"key"`
-}
-
 /*
-S3Download downloads a file from an S3 bucket/key.
+Download downloads a file from an S3 bucket/key.
 */
-func S3Download(file *os.File, bucket, key string) error {
+func Download(file *os.File, bucket, key string) error {
 	downloader := s3manager.NewDownloader(session.New(&aws.Config{Region: aws.String("us-east-1")}))
 	numBytes, err := downloader.Download(file,
 		&s3.GetObjectInput{
@@ -43,9 +36,9 @@ func S3Download(file *os.File, bucket, key string) error {
 }
 
 /*
-S3Upload uploads a file to an S3 bucket.
+Upload uploads a file to an S3 bucket.
 */
-func S3Upload(file *os.File, bucket, key string) error {
+func Upload(file *os.File, bucket, key string) error {
 	uploader := s3manager.NewUploader(session.New(&aws.Config{Region: aws.String("us-east-1")}))
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Body:   file,

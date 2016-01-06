@@ -20,30 +20,30 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/venicegeo/pzsvc-sdk-go/jobmanager"
-	"github.com/venicegeo/pzsvc-sdk-go/s3helper"
+	"github.com/venicegeo/pzsvc-sdk-go/job"
+	"github.com/venicegeo/pzsvc-sdk-go/s3"
 )
 
 // FunctionFunc defines the signature of our function creator.
 type FunctionFunc func(http.ResponseWriter, *http.Request,
-	*jobmanager.JobOutput, jobmanager.JobInput)
+	*job.OutputMsg, job.InputMsg)
 
 // MakeFunction wraps the individual PDAL functions.
 // Parse the input and output filenames, creating files as needed. Download the
 // input data and upload the output data.
 func MakeFunction(fn func(http.ResponseWriter, *http.Request,
-	*jobmanager.JobOutput, jobmanager.JobInput, string, string)) FunctionFunc {
-	return func(w http.ResponseWriter, r *http.Request, res *jobmanager.JobOutput,
-		msg jobmanager.JobInput) {
+	*job.OutputMsg, job.InputMsg, string, string)) FunctionFunc {
+	return func(w http.ResponseWriter, r *http.Request, res *job.OutputMsg,
+		msg job.InputMsg) {
 		var inputName, outputName string
 		var fileIn, fileOut *os.File
 
 		// Split the source S3 key string, interpreting the last element as the
 		// input filename. Create the input file, throwing 500 on error.
-		inputName = s3helper.ParseFilenameFromKey(msg.Source.Key)
+		inputName = s3.ParseFilenameFromKey(msg.Source.Key)
 		fileIn, err := os.Create(inputName)
 		if err != nil {
-			jobmanager.InternalError(w, r, res, err.Error())
+			job.InternalError(w, r, res, err.Error())
 			return
 		}
 		defer fileIn.Close()
@@ -52,19 +52,19 @@ func MakeFunction(fn func(http.ResponseWriter, *http.Request,
 		// element as the output filename. Create the output file, throwing 500 on
 		// error.
 		if len(msg.Destination.Key) > 0 {
-			outputName = s3helper.ParseFilenameFromKey(msg.Destination.Key)
+			outputName = s3.ParseFilenameFromKey(msg.Destination.Key)
 			fileOut, err = os.Create(outputName)
 			if err != nil {
-				jobmanager.InternalError(w, r, res, err.Error())
+				job.InternalError(w, r, res, err.Error())
 				return
 			}
 			defer fileOut.Close()
 		}
 
 		// Download the source data from S3, throwing 500 on error.
-		err = s3helper.S3Download(fileIn, msg.Source.Bucket, msg.Source.Key)
+		err = s3.Download(fileIn, msg.Source.Bucket, msg.Source.Key)
 		if err != nil {
-			jobmanager.InternalError(w, r, res, err.Error())
+			job.InternalError(w, r, res, err.Error())
 			return
 		}
 
@@ -74,9 +74,9 @@ func MakeFunction(fn func(http.ResponseWriter, *http.Request,
 		// If an output has been created, upload the destination data to S3,
 		// throwing 500 on error.
 		if len(msg.Destination.Key) > 0 {
-			err = s3helper.S3Upload(fileOut, msg.Destination.Bucket, msg.Destination.Key)
+			err = s3.Upload(fileOut, msg.Destination.Bucket, msg.Destination.Key)
 			if err != nil {
-				jobmanager.InternalError(w, r, res, err.Error())
+				job.InternalError(w, r, res, err.Error())
 				return
 			}
 		}

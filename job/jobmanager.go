@@ -1,4 +1,4 @@
-package jobmanager
+package job
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/venicegeo/pzsvc-sdk-go/s3helper"
 )
 
 // StatusType is a string describing the state of the job.
@@ -29,19 +27,26 @@ func (status StatusType) String() string {
 	return statuses[status]
 }
 
-// JobInput defines the expected input JSON structure.
-// We currently support S3 input (bucket/key), though provider-specific (e.g.,
-// GRiD) may be legitimate.
-type JobInput struct {
-	Source      s3helper.S3Bucket `json:"source"`
-	Function    *string           `json:"function"`
-	Options     *json.RawMessage  `json:"options"`
-	Destination s3helper.S3Bucket `json:"destination"`
+// S3Bucket defines the expected JSON structure for S3 buckets.
+// An S3 bucket can be used for source (input) and destination (output) files.
+type S3Bucket struct {
+	Bucket string `json:"bucket"`
+	Key    string `json:"key"`
 }
 
-// JobOutput defines the expected output JSON structure.
-type JobOutput struct {
-	Input      JobInput                    `json:"input"`
+// InputMsg defines the expected input JSON structure.
+// We currently support S3 input (bucket/key), though provider-specific (e.g.,
+// GRiD) may be legitimate.
+type InputMsg struct {
+	Source      S3Bucket         `json:"source"`
+	Function    *string          `json:"function"`
+	Options     *json.RawMessage `json:"options"`
+	Destination S3Bucket         `json:"destination"`
+}
+
+// OutputMsg defines the expected output JSON structure.
+type OutputMsg struct {
+	Input      InputMsg                    `json:"input"`
 	StartedAt  time.Time                   `json:"started_at"`
 	FinishedAt time.Time                   `json:"finished_at"`
 	Code       int                         `json:"code"`
@@ -77,9 +82,9 @@ func Update(t StatusType, r *http.Request) {
 /*
 BadRequest handles bad requests.
 
-All bad requests result in a failure in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusBadRequest (400) as well as a message to the JobOutput, which is returned as JSON.
+All bad requests result in a failure in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusBadRequest (400) as well as a message to the OutputMsg, which is returned as JSON.
 */
-func BadRequest(w http.ResponseWriter, r *http.Request, res JobOutput, message string) {
+func BadRequest(w http.ResponseWriter, r *http.Request, res OutputMsg, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusBadRequest)
 	res.Code = http.StatusBadRequest
@@ -93,9 +98,9 @@ func BadRequest(w http.ResponseWriter, r *http.Request, res JobOutput, message s
 /*
 InternalError handles internal server errors.
 
-All internal server errors result in an error in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusInternalServerError (500) as well as a message to the JobOutput, which is returned as JSON.
+All internal server errors result in an error in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusInternalServerError (500) as well as a message to the OutputMsg, which is returned as JSON.
 */
-func InternalError(w http.ResponseWriter, r *http.Request, res *JobOutput, message string) {
+func InternalError(w http.ResponseWriter, r *http.Request, res *OutputMsg, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusInternalServerError)
 	res.Code = http.StatusInternalServerError
@@ -109,9 +114,9 @@ func InternalError(w http.ResponseWriter, r *http.Request, res *JobOutput, messa
 /*
 Okay handles successful calls.
 
-All successful calls result in sucess in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusOK (200) as well as a message to the JobOutput, which is returned as JSON.
+All successful calls result in sucess in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusOK (200) as well as a message to the OutputMsg, which is returned as JSON.
 */
-func Okay(w http.ResponseWriter, r *http.Request, res JobOutput, message string) {
+func Okay(w http.ResponseWriter, r *http.Request, res OutputMsg, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	res.Code = http.StatusOK
@@ -122,9 +127,9 @@ func Okay(w http.ResponseWriter, r *http.Request, res JobOutput, message string)
 	Update(Success, r)
 }
 
-// GetJobInput provides a common means of parsing the JobInput JSON.
-func GetJobInput(w http.ResponseWriter, r *http.Request, res JobOutput) JobInput {
-	var msg JobInput
+// GetInputMsg provides a common means of parsing the InputMsg JSON.
+func GetInputMsg(w http.ResponseWriter, r *http.Request, res OutputMsg) InputMsg {
+	var msg InputMsg
 
 	// There should always be a body, else how are we to know what to do? Throw
 	// 400 if missing.
@@ -138,7 +143,7 @@ func GetJobInput(w http.ResponseWriter, r *http.Request, res JobOutput) JobInput
 		InternalError(w, r, &res, err.Error())
 	}
 
-	// Throw 400 if we cannot unmarshal the body as a valid JobInput.
+	// Throw 400 if we cannot unmarshal the body as a valid InputMsg.
 	if err := json.Unmarshal(b, &msg); err != nil {
 		BadRequest(w, r, res, err.Error())
 	}
