@@ -47,8 +47,8 @@ func (status StatusType) String() string {
 // S3Bucket defines the expected JSON structure for S3 buckets.
 // An S3 bucket can be used for source (input) and destination (output) files.
 type S3Bucket struct {
-	Bucket string `json:"bucket"`
-	Key    string `json:"key"`
+	Bucket string `json:"bucket,omitempty"`
+	Key    string `json:"key,omitempty"`
 }
 
 // InputMsg defines the expected input JSON structure.
