@@ -174,3 +174,61 @@ func ParseFilenameFromKey(key string) string {
 	keySlice := strings.Split(key, "/")
 	return keySlice[len(keySlice)-1]
 }
+
+type functionFunc func(http.ResponseWriter, *http.Request,
+	*objects.JobOutput, objects.JobInput)
+
+// makeFunction wraps the individual PDAL functions.
+// Parse the input and output filenames, creating files as needed. Download the
+// input data and upload the output data.
+func makeFunction(fn func(http.ResponseWriter, *http.Request,
+	*objects.JobOutput, objects.JobInput, string, string)) functionFunc {
+	return func(w http.ResponseWriter, r *http.Request, res *objects.JobOutput,
+		msg objects.JobInput) {
+		var inputName, outputName string
+		var fileIn, fileOut *os.File
+
+		// Split the source S3 key string, interpreting the last element as the
+		// input filename. Create the input file, throwing 500 on error.
+		inputName = ParseFilenameFromKey(msg.Source.Key)
+		fileIn, err := os.Create(inputName)
+		if err != nil {
+			InternalError(w, r, res, err.Error())
+			return
+		}
+		defer fileIn.Close()
+
+		// If provided, split the destination S3 key string, interpreting the last
+		// element as the output filename. Create the output file, throwing 500 on
+		// error.
+		if len(msg.Destination.Key) > 0 {
+			outputName = ParseFilenameFromKey(msg.Destination.Key)
+			fileOut, err = os.Create(outputName)
+			if err != nil {
+				InternalError(w, r, res, err.Error())
+				return
+			}
+			defer fileOut.Close()
+		}
+
+		// Download the source data from S3, throwing 500 on error.
+		err = S3Download(fileIn, msg.Source.Bucket, msg.Source.Key)
+		if err != nil {
+			InternalError(w, r, res, err.Error())
+			return
+		}
+
+		// Run the PDAL function.
+		fn(w, r, res, msg, inputName, outputName)
+
+		// If an output has been created, upload the destination data to S3,
+		// throwing 500 on error.
+		if len(msg.Destination.Key) > 0 {
+			err = S3Upload(fileOut, msg.Destination.Bucket, msg.Destination.Key)
+			if err != nil {
+				InternalError(w, r, res, err.Error())
+				return
+			}
+		}
+	}
+}
