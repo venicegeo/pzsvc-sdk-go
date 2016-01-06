@@ -14,7 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package s3 provides a number of S3 helper functions.
+/*
+Package s3 provides a number of S3 helper functions.
+
+For example,
+
+	// Get the filename from the key.
+	filename := s3.ParseFilenameFromKey(key)
+
+	// Create the file.
+	file, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	// Download the data.
+	err = s3.Download(file, bucket, key)
+	if err != nil {
+		panic(err)
+	}
+*/
 package s3
 
 import (
@@ -31,7 +51,10 @@ import (
 )
 
 /*
-Download downloads a file from an S3 bucket/key.
+Download downloads a file from S3.
+
+This is merely a wrapper around the aws-sdk-go downloader. It allows us to
+isolate the aws-sdk-go dependencies and unify error handling.
 */
 func Download(file *os.File, bucket, key string) error {
 	downloader := s3manager.NewDownloader(session.New(&aws.Config{Region: aws.String("us-east-1")}))
@@ -53,7 +76,10 @@ func Download(file *os.File, bucket, key string) error {
 }
 
 /*
-Upload uploads a file to an S3 bucket.
+Upload uploads a file to S3.
+
+This is merely a wrapper around the aws-sdk-go uploader. It allows us to isolate
+the aws-sdk-go dependencies and unify error handling.
 */
 func Upload(file *os.File, bucket, key string) error {
 	uploader := s3manager.NewUploader(session.New(&aws.Config{Region: aws.String("us-east-1")}))
@@ -74,7 +100,12 @@ func Upload(file *os.File, bucket, key string) error {
 	return nil
 }
 
-// ParseFilenameFromKey parses the S3 filename from the key.
+/*
+ParseFilenameFromKey parses the S3 filename from the key.
+
+This would typically be used prior to s3.Download or s3.Upload to create the
+required *os.File.
+*/
 func ParseFilenameFromKey(key string) string {
 	keySlice := strings.Split(key, "/")
 	return keySlice[len(keySlice)-1]
