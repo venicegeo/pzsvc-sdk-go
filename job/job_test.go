@@ -18,10 +18,16 @@ package job_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/venicegeo/pzsvc-sdk-go/job"
 )
+
+func ExampleFoo() {
+	var msg job.InputMsg
+	fmt.Println(msg)
+}
 
 func TestInputMsg(t *testing.T) {
 	in := `
