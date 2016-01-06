@@ -175,14 +175,15 @@ func ParseFilenameFromKey(key string) string {
 	return keySlice[len(keySlice)-1]
 }
 
-type functionFunc func(http.ResponseWriter, *http.Request,
+// FunctionFunc defines the signature of our function creator.
+type FunctionFunc func(http.ResponseWriter, *http.Request,
 	*objects.JobOutput, objects.JobInput)
 
-// makeFunction wraps the individual PDAL functions.
+// MakeFunction wraps the individual PDAL functions.
 // Parse the input and output filenames, creating files as needed. Download the
 // input data and upload the output data.
-func makeFunction(fn func(http.ResponseWriter, *http.Request,
-	*objects.JobOutput, objects.JobInput, string, string)) functionFunc {
+func MakeFunction(fn func(http.ResponseWriter, *http.Request,
+	*objects.JobOutput, objects.JobInput, string, string)) FunctionFunc {
 	return func(w http.ResponseWriter, r *http.Request, res *objects.JobOutput,
 		msg objects.JobInput) {
 		var inputName, outputName string
