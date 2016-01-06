@@ -14,16 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package objects_test
+package job_test
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/venicegeo/pzsvc-sdk-go/objects"
+	"github.com/venicegeo/pzsvc-sdk-go/job"
 )
 
-func TestJobInput(t *testing.T) {
+func TestInputMsg(t *testing.T) {
 	in := `
     {
       "source": {
@@ -39,9 +39,9 @@ func TestJobInput(t *testing.T) {
 
 	b := []byte(in)
 
-	var msg objects.JobInput
+	var msg job.InputMsg
 	if err := json.Unmarshal(b, &msg); err != nil {
-		t.Error("Error parsing JobInput")
+		t.Error("Error parsing InputMsg")
 	}
 	if msg.Source.Bucket != "Foo" {
 		t.Error(msg.Source.Bucket, "!= `Foo`")
@@ -60,7 +60,7 @@ func TestJobInput(t *testing.T) {
 	}
 }
 
-func TestJobOutput(t *testing.T) {
+func TestOutputMsg(t *testing.T) {
 	out := `
     {
       "input": {
@@ -78,9 +78,9 @@ func TestJobOutput(t *testing.T) {
 
 	b := []byte(out)
 
-	var msg objects.JobOutput
+	var msg job.OutputMsg
 	if err := json.Unmarshal(b, &msg); err != nil {
-		t.Error("Error parsing JobOutput")
+		t.Error("Error parsing OutputMsg")
 	}
 	if msg.Input.Source.Bucket != "Foo" {
 		t.Error(msg.Input.Source.Bucket, "!= `Foo`")
@@ -106,22 +106,22 @@ func TestJobOutput(t *testing.T) {
 }
 
 func TestStatusTypes(t *testing.T) {
-	if objects.Submitted.String() != "submitted" {
-		t.Error(objects.Submitted.String(), "!= `submitted`")
+	if job.Submitted.String() != "submitted" {
+		t.Error(job.Submitted.String(), "!= `submitted`")
 	}
-	if objects.Running.String() != "running" {
-		t.Error(objects.Running.String(), "!= `running`")
+	if job.Running.String() != "running" {
+		t.Error(job.Running.String(), "!= `running`")
 	}
-	if objects.Success.String() != "success" {
-		t.Error(objects.Success.String(), "!= `success`")
+	if job.Success.String() != "success" {
+		t.Error(job.Success.String(), "!= `success`")
 	}
-	if objects.Cancelled.String() != "cancelled" {
-		t.Error(objects.Cancelled.String(), "!= `cancelled`")
+	if job.Cancelled.String() != "cancelled" {
+		t.Error(job.Cancelled.String(), "!= `cancelled`")
 	}
-	if objects.Error.String() != "error" {
-		t.Error(objects.Error.String(), "!= `error`")
+	if job.Error.String() != "error" {
+		t.Error(job.Error.String(), "!= `error`")
 	}
-	if objects.Fail.String() != "fail" {
-		t.Error(objects.Fail.String(), "!= `fail`")
+	if job.Fail.String() != "fail" {
+		t.Error(job.Fail.String(), "!= `fail`")
 	}
 }

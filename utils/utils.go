@@ -14,6 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/*
+Package utils provides various utilities that are used throughout the project.
+
+Provide functions to return canned responses: StatusOK, StatusBadRequest, and StatusInternalServerError.
+*/
 package utils
 
 import (

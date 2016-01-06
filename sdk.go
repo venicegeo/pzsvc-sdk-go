@@ -1,5 +1,5 @@
 /*
-Copyright 2015-2016, RadiantBlue Technologies, Inc.
+Copyright 2016, RadiantBlue Technologies, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
-Package utils provides various utilities that are used throughout the project.
-
-Provide functions to return canned responses: StatusOK, StatusBadRequest, and StatusInternalServerError.
-*/
-package utils
+package sdk
