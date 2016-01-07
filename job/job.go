@@ -71,6 +71,28 @@ type OutputMsg struct {
 	Response   map[string]*json.RawMessage `json:"response,omitempty"`
 }
 
+// ResourceMetadata defines the metadata required to register the service.
+type ResourceMetadata struct {
+	Name                string    `json:"name"`
+	ServiceID           string    `json:"serviceID"`
+	Description         string    `json:"description"`
+	URL                 string    `json:"url"`
+	Networks            string    `json:"networks"`
+	QoS                 string    `json:"qos"`
+	Availability        string    `json:"availability"`
+	Tags                string    `json:"tags"`
+	ClassType           string    `json:"classType"`
+	TermDate            time.Time `json:"termDate"`
+	ClientCertRequired  bool      `json:"clientCertRequired"`
+	CredentialsRequired bool      `json:"credentialsRequired"`
+	PreAuthRequired     bool      `json:"preAuthRequired"`
+	Contracts           string    `json:"contracts"`
+	Method              string    `json:"method"`
+	MimeType            string    `json:"mimeType"`
+	Params              string    `json:"params"`
+	Reason              string    `json:"reason"`
+}
+
 // UpdateMsg defines the expected output JSON structure for updating the JobManager.
 type UpdateMsg struct {
 	Status string `json:"status"`
