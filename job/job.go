@@ -82,15 +82,15 @@ type ResourceMetadata struct {
 	Availability        string    `json:"availability"`
 	Tags                string    `json:"tags"`
 	ClassType           string    `json:"classType"`
-	TermDate            time.Time `json:"termDate"`
-	ClientCertRequired  bool      `json:"clientCertRequired"`
-	CredentialsRequired bool      `json:"credentialsRequired"`
-	PreAuthRequired     bool      `json:"preAuthRequired"`
-	Contracts           string    `json:"contracts"`
-	Method              string    `json:"method"`
-	MimeType            string    `json:"mimeType"`
-	Params              string    `json:"params"`
-	Reason              string    `json:"reason"`
+	TermDate            time.Time `json:"termDate,omitempty"`
+	ClientCertRequired  bool      `json:"clientCertRequired,omitempty"`
+	CredentialsRequired bool      `json:"credentialsRequired,omitempty"`
+	PreAuthRequired     bool      `json:"preAuthRequired,omitempty"`
+	Contracts           string    `json:"contracts,omitempty"`
+	Method              string    `json:"method,omitempty"`
+	MimeType            string    `json:"mimeType,omitempty"`
+	Params              string    `json:"params,omitempty"`
+	Reason              string    `json:"reason,omitempty"`
 }
 
 // UpdateMsg defines the expected output JSON structure for updating the JobManager.
