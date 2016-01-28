@@ -22,6 +22,7 @@ Provide functions to return canned responses: StatusOK, StatusBadRequest, and St
 package utils
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -79,6 +80,13 @@ func MakeFunction(
 		// Download the source data from S3, throwing 500 on error.
 		err = s3.Download(fileIn, msg.Source.Bucket, msg.Source.Key)
 		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		info, err := os.Stat(outputName)
+		if err != nil {
+			fmt.Println(info)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
