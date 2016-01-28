@@ -84,12 +84,12 @@ func MakeFunction(
 			return
 		}
 
-		info, err := os.Stat(outputName)
-		if err != nil {
-			fmt.Println(info)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		info, _ := os.Stat(outputName)
+		fmt.Println(info)
+		// if err != nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
 
 		// Run the PDAL function.
 		fn(w, r, res, msg, inputName, outputName)
