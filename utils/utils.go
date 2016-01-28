@@ -22,6 +22,7 @@ Provide functions to return canned responses: StatusOK, StatusBadRequest, and St
 package utils
 
 import (
+	"log"
 	"net/http"
 	"os"
 
@@ -82,6 +83,15 @@ func MakeFunction(
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		log.Printf("Stat %s\n", outputName)
+		info, _ := os.Stat(outputName)
+		log.Println(info)
+		// if err != nil {
+		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 	return
+		// }
+		log.Println("Run!")
 
 		// Run the PDAL function.
 		fn(w, r, res, msg, inputName, outputName)
