@@ -19,6 +19,7 @@ package job
 
 import (
 	"bytes"
+	"errors"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -77,13 +78,18 @@ type OutputMsg struct {
 // ResourceMetadata defines the metadata required to register the service.
 type ResourceMetadata struct {
 	Name                string    `json:"name"`
-	ServiceID           string    `json:"serviceID"`
 	Description         string    `json:"description"`
 	URL                 string    `json:"url"`
 	Method              string    `json:"method,omitempty"`
   RequestMimeType     string    `json:"requestMimeType,omitempty"`
 	ResponseMimeType    string    `json:"responseMimeType,omitempty"`
 	Params              string    `json:"params,omitempty"`
+}
+
+// RegisterServiceMsg defines the expected output JSON returned by Piazza when
+// an external service is registered.
+type RegisterServiceMsg struct {
+	ResourceID          string    `json:"resourceId"`
 }
 
 // UpdateMsg defines the expected output JSON structure for updating the
@@ -204,6 +210,7 @@ const ContentTypeJSON = "application/json"
 
 // registryURL is the Piazza registration endpoint
 const RegistryURL = "http://pz-servicecontroller.cf.piazzageo.io/servicecontroller/registerService"
+//const RegistryURL = "http://localhost:8082/servicecontroller/registerService"
 
 /*
 RegisterService handles service registartion with Piazza for external services.
@@ -214,10 +221,26 @@ func RegisterService(m ResourceMetadata) error {
 		return err
 	}
 
-	_, err = http.Post(RegistryURL, ContentTypeJSON, bytes.NewBuffer(data))
+	response, err := http.Post(RegistryURL, ContentTypeJSON, bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
+
+	if response.Body == nil {
+		return errors.New("No JSON body returned from registerService")
+	}
+
+	b, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return err;
+	}
+
+	// Throw 400 if we cannot unmarshal the body as a valid InputMsg.
+	var rm RegisterServiceMsg;
+	if err := json.Unmarshal(b, &rm); err != nil {
+		return err;
+	}
+	log.Println("RegisterService received resourceId="+rm.ResourceID)
 
 	return nil
 }
