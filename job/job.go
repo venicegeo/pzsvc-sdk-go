@@ -18,6 +18,7 @@ limitations under the License.
 package job
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -79,20 +80,10 @@ type ResourceMetadata struct {
 	ServiceID           string    `json:"serviceID"`
 	Description         string    `json:"description"`
 	URL                 string    `json:"url"`
-	Networks            string    `json:"networks"`
-	QoS                 string    `json:"qos"`
-	Availability        string    `json:"availability"`
-	Tags                string    `json:"tags"`
-	ClassType           string    `json:"classType"`
-	TermDate            time.Time `json:"termDate,omitempty"`
-	ClientCertRequired  bool      `json:"clientCertRequired,omitempty"`
-	CredentialsRequired bool      `json:"credentialsRequired,omitempty"`
-	PreAuthRequired     bool      `json:"preAuthRequired,omitempty"`
-	Contracts           string    `json:"contracts,omitempty"`
 	Method              string    `json:"method,omitempty"`
-	MimeType            string    `json:"mimeType,omitempty"`
+  RequestMimeType     string    `json:"requestMimeType,omitempty"`
+	ResponseMimeType    string    `json:"responseMimeType,omitempty"`
 	Params              string    `json:"params,omitempty"`
-	Reason              string    `json:"reason,omitempty"`
 }
 
 // UpdateMsg defines the expected output JSON structure for updating the
@@ -206,4 +197,27 @@ func GetInputMsg(
 	}
 
 	return msg
+}
+
+// ContentTypeJSON is the http content-type for JSON.
+const ContentTypeJSON = "application/json"
+
+// registryURL is the Piazza registration endpoint
+const RegistryURL = "http://localhost:8082/servicecontroller/registerService"
+
+/*
+RegisterService handles service registartion with Piazza for external services.
+*/
+func RegisterService(m ResourceMetadata) error {
+  data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	_, err = http.Post(RegistryURL, ContentTypeJSON, bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
