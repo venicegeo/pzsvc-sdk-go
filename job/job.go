@@ -203,7 +203,7 @@ func GetInputMsg(
 const ContentTypeJSON = "application/json"
 
 // registryURL is the Piazza registration endpoint
-const RegistryURL = "http://localhost:8082/servicecontroller/registerService"
+const RegistryURL = "http://pz-servicecontroller.cf.piazzageo.io/servicecontroller/registerService"
 
 /*
 RegisterService handles service registartion with Piazza for external services.
