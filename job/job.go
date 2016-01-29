@@ -38,7 +38,9 @@ const (
 	Fail
 )
 
-var statuses = [...]string{"submitted", "running", "success", "cancelled", "error", "fail"}
+var statuses = [...]string{
+	"submitted", "running", "success", "cancelled", "error", "fail",
+}
 
 func (status StatusType) String() string {
 	return statuses[status]
@@ -93,7 +95,8 @@ type ResourceMetadata struct {
 	Reason              string    `json:"reason,omitempty"`
 }
 
-// UpdateMsg defines the expected output JSON structure for updating the JobManager.
+// UpdateMsg defines the expected output JSON structure for updating the
+// JobManager.
 type UpdateMsg struct {
 	Status string `json:"status"`
 }
@@ -121,7 +124,10 @@ func Update(t StatusType, r *http.Request) {
 /*
 BadRequest handles bad requests.
 
-All bad requests result in a failure in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusBadRequest (400) as well as a message to the OutputMsg, which is returned as JSON.
+All bad requests result in a failure in the eyes of the JobManager. The
+ResponseWriter echos some key aspects of the Request (e.g., input, start time)
+and appends StatusBadRequest (400) as well as a message to the OutputMsg, which
+is returned as JSON.
 */
 func BadRequest(w http.ResponseWriter, r *http.Request, res OutputMsg, message string) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -129,7 +135,7 @@ func BadRequest(w http.ResponseWriter, r *http.Request, res OutputMsg, message s
 	res.Code = http.StatusBadRequest
 	res.Message = message
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	Update(Fail, r)
 }
@@ -137,15 +143,20 @@ func BadRequest(w http.ResponseWriter, r *http.Request, res OutputMsg, message s
 /*
 InternalError handles internal server errors.
 
-All internal server errors result in an error in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusInternalServerError (500) as well as a message to the OutputMsg, which is returned as JSON.
+All internal server errors result in an error in the eyes of the JobManager. The
+ResponseWriter echos some key aspects of the Request (e.g., input, start time)
+and appends StatusInternalServerError (500) as well as a message to the
+OutputMsg, which is returned as JSON.
 */
-func InternalError(w http.ResponseWriter, r *http.Request, res OutputMsg, message string) {
+func InternalError(
+	w http.ResponseWriter, r *http.Request, res OutputMsg, message string,
+) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusInternalServerError)
 	res.Code = http.StatusInternalServerError
 	res.Message = message
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	Update(Error, r)
 }
@@ -153,38 +164,45 @@ func InternalError(w http.ResponseWriter, r *http.Request, res OutputMsg, messag
 /*
 Okay handles successful calls.
 
-All successful calls result in sucess in the eyes of the JobManager. The ResponseWriter echos some key aspects of the Request (e.g., input, start time) and appends StatusOK (200) as well as a message to the OutputMsg, which is returned as JSON.
+All successful calls result in sucess in the eyes of the JobManager. The
+ResponseWriter echos some key aspects of the Request (e.g., input, start time)
+and appends StatusOK (200) as well as a message to the OutputMsg, which is
+returned as JSON.
 */
-func Okay(w http.ResponseWriter, r *http.Request, res OutputMsg, message string) {
+func Okay(
+	w http.ResponseWriter, r *http.Request, res OutputMsg, message string,
+) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	res.Code = http.StatusOK
 	res.Message = message
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	Update(Success, r)
 }
 
 // GetInputMsg provides a common means of parsing the InputMsg JSON.
-func GetInputMsg(w http.ResponseWriter, r *http.Request, res OutputMsg) InputMsg {
+func GetInputMsg(
+	w http.ResponseWriter, r *http.Request, res OutputMsg,
+) InputMsg {
 	var msg InputMsg
 
 	// There should always be a body, else how are we to know what to do? Throw
 	// 400 if missing.
 	if r.Body == nil {
-		BadRequest(w, r, res, "No JSON")
+		http.Error(w, "No JSON", http.StatusBadRequest)
 	}
 
 	// Throw 500 if we cannot read the body.
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		InternalError(w, r, res, err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	// Throw 400 if we cannot unmarshal the body as a valid InputMsg.
 	if err := json.Unmarshal(b, &msg); err != nil {
-		BadRequest(w, r, res, err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	return msg
