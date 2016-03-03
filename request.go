@@ -20,9 +20,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"mime"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 // RequestDecorator decorates an http.Request
@@ -134,8 +137,8 @@ type DoRequestCallback interface {
 
 var client *http.Client
 
-// DoRequest performs the request and attempts to unmarshal the response
-// into the object provided
+// DoRequest performs the request and forwards the response
+// to the callback provided
 func DoRequest(request *http.Request, callback DoRequestCallback) error {
 	if client == nil {
 		transport := &http.Transport{
@@ -146,4 +149,34 @@ func DoRequest(request *http.Request, callback DoRequestCallback) error {
 	}
 	response, err := client.Do(request)
 	return callback.Callback(response, err)
+}
+
+// DownloadCallback is an example callback object for DoRequest
+// that performs a download operation
+type DownloadCallback struct {
+	FileName string
+}
+
+// Callback is the callback function for DownloadCallback
+func (dc *DownloadCallback) Callback(response *http.Response, err error) error {
+	if err != nil {
+		return err
+	}
+	file, err := os.Create("temp")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	cd := response.Header.Get("Content-Disposition")
+	_, params, err := mime.ParseMediaType(cd)
+	if err != nil {
+		// This generally means a broader error which is hopefully contained in the body
+		defer response.Body.Close()
+		body, _ := ioutil.ReadAll(response.Body)
+		return &HTTPError{Message: string(body), Status: http.StatusNotAcceptable}
+	}
+	dc.FileName = params["filename"]
+	err = os.Rename(file.Name(), dc.FileName)
+	return err
 }
